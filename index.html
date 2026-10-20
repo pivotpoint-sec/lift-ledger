@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lift Ledger</title>
+<meta name="description" content="Log your sets, see weekly volume per muscle group and keep weekly progress photos. Everything stays on your phone.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#EDF0F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1319" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lift Ledger">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Lift Ledger</h1>
+    <p class="sub" id="todayLabel"></p>
+  </header>
+
+  <div class="stack" id="banners"></div>
+
+  <main>
+    <!-- LOG -->
+    <section class="view is-active" id="view-log" aria-labelledby="hLog">
+      <div class="stack">
+        <h2 id="hLog">Log a set</h2>
+        <form class="card stack" id="setForm" novalidate>
+          <div class="field">
+            <label for="date">Session date</label>
+            <input type="date" id="date">
+          </div>
+          <div class="field">
+            <label for="exercise">Exercise</label>
+            <select id="exercise"></select>
+            <div class="chips" id="muscleHint"></div>
+          </div>
+          <div class="row3">
+            <div class="field">
+              <label for="kg">Weight, kg</label>
+              <input type="number" id="kg" inputmode="decimal" step="0.5" min="0" placeholder="0">
+            </div>
+            <div class="field">
+              <label for="reps">Reps</label>
+              <input type="number" id="reps" inputmode="numeric" step="1" min="1" placeholder="8">
+            </div>
+            <div class="field">
+              <label for="rpe">RPE</label>
+              <select id="rpe">
+                <option value="">–</option>
+                <option>6</option><option>6.5</option><option>7</option><option>7.5</option>
+                <option>8</option><option>8.5</option><option>9</option><option>9.5</option><option>10</option>
+              </select>
+            </div>
+          </div>
+          <label class="check" for="warm"><input type="checkbox" id="warm"> Warm-up set, left out of weekly volume</label>
+          <p class="hint" id="lastHint"></p>
+          <button type="submit" class="btn" id="addBtn">Add set</button>
+        </form>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+
+        <h2 id="sessionTitle">Today</h2>
+        <div class="stats" id="sessionStats"></div>
+        <div class="card" id="sessionList"></div>
+      </div>
+    </section>
+
+    <!-- WEEK -->
+    <section class="view" id="view-week" aria-labelledby="weekTitle">
+      <div class="stack">
+        <div class="weekbar">
+          <button type="button" class="nav" id="prevWeek" aria-label="Previous week">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg>
+          </button>
+          <div class="mid">
+            <h2 id="weekTitle"></h2>
+            <p id="weekSub"></p>
+          </div>
+          <button type="button" class="nav" id="nextWeek" aria-label="Next week">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 5 16 12 9 19"/></svg>
+          </button>
+        </div>
+        <div class="stats" id="weekStats"></div>
+        <div class="card">
+          <p class="legend">Bars show effective sets. The shaded band is the target range.</p>
+          <ul class="mlist" id="muscleList"></ul>
+        </div>
+        <div class="card" id="recs"></div>
+      </div>
+    </section>
+
+    <!-- PHOTOS -->
+    <section class="view" id="view-photos" aria-labelledby="hPhotos">
+      <div class="stack">
+        <h2 id="hPhotos">Weekly photos</h2>
+        <div class="card stack">
+          <div class="rowhead"><h3>Check-in</h3><span class="muted" id="ciWeek"></span></div>
+          <p class="muted small">Photos never leave this phone. The same spot, light and time of day make weeks easier to compare.</p>
+          <div class="slots">
+            <div class="slot">
+              <div class="shot" id="shot-front"></div>
+              <span class="lbl">Front</span>
+              <button type="button" class="btn-quiet" data-add="front" id="add-front">Add</button>
+              <button type="button" class="link" data-del="front" id="del-front" hidden>Delete</button>
+              <input type="file" accept="image/*" id="photoIn-front" hidden>
+            </div>
+            <div class="slot">
+              <div class="shot" id="shot-side"></div>
+              <span class="lbl">Side</span>
+              <button type="button" class="btn-quiet" data-add="side" id="add-side">Add</button>
+              <button type="button" class="link" data-del="side" id="del-side" hidden>Delete</button>
+              <input type="file" accept="image/*" id="photoIn-side" hidden>
+            </div>
+            <div class="slot">
+              <div class="shot" id="shot-back"></div>
+              <span class="lbl">Back</span>
+              <button type="button" class="btn-quiet" data-add="back" id="add-back">Add</button>
+              <button type="button" class="link" data-del="back" id="del-back" hidden>Delete</button>
+              <input type="file" accept="image/*" id="photoIn-back" hidden>
+            </div>
+          </div>
+          <p class="status" id="photoStatus" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="card stack">
+          <h3>Compare weeks</h3>
+          <div class="row2" id="cmpPickers">
+            <div class="field">
+              <label for="cmpA">From</label>
+              <select id="cmpA"></select>
+            </div>
+            <div class="field">
+              <label for="cmpB">To</label>
+              <select id="cmpB"></select>
+            </div>
+          </div>
+          <div class="seg" role="group" aria-label="Pose">
+            <button type="button" data-pose="front" aria-pressed="true">Front</button>
+            <button type="button" data-pose="side" aria-pressed="false">Side</button>
+            <button type="button" data-pose="back" aria-pressed="false">Back</button>
+          </div>
+          <div id="cmpView"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MORE -->
+    <section class="view" id="view-more" aria-labelledby="hMore">
+      <div class="stack">
+        <h2 id="hMore">More</h2>
+
+        <div class="card stack">
+          <h3>Back up your data</h3>
+          <p class="note">Your log lives only on this device. A backup file protects your history if the browser clears its storage or you change phone.</p>
+          <label class="check" for="incPhotos"><input type="checkbox" id="incPhotos"> Include photos (bigger file)</label>
+          <div class="btnrow">
+            <button type="button" class="btn" id="exportBtn">Download backup</button>
+            <button type="button" class="btn-quiet" id="importBtn">Restore from backup</button>
+          </div>
+          <input type="file" id="importIn" accept="application/json,.json" hidden>
+          <div id="restorePrompt"></div>
+          <p class="status" id="backupStatus" role="status" aria-live="polite"></p>
+          <p class="muted small" id="lastBackup"></p>
+        </div>
+
+        <details class="card" id="targetsBox">
+          <summary>Weekly targets</summary>
+          <div id="targets"></div>
+        </details>
+
+        <details class="card">
+          <summary>How sets are counted</summary>
+          <p>A working set counts as 1 set for each primary muscle and half a set for each secondary muscle, so a bench press adds 1 to chest and 0.5 to triceps and shoulders. Warm-up sets are left out.</p>
+          <p>Weeks run Monday to Sunday. The default targets are starting points, not prescriptions. Change them to suit your programme.</p>
+        </details>
+
+        <div class="card stack" id="installCard"></div>
+
+        <div class="card stack" id="aboutCard"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="bottom" aria-label="Sections">
+  <div class="in">
+    <button type="button" id="nav-log" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Log</span>
+    </button>
+    <button type="button" id="nav-week">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Week</span>
+    </button>
+    <button type="button" id="nav-photos">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photos</span>
+    </button>
+    <button type="button" id="nav-more">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span>More</span>
+    </button>
+  </div>
+</nav>
+
+<script src="config.js"></script>
+<script src="logic.js"></script>
+<script src="storage.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
